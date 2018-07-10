@@ -1,0 +1,31 @@
+language: go
+dist: trusty
+before_install:
+- sudo apt-get update -qq
+install:
+- mkdir -p $GOPATH/src/golang.org/x
+- pushd $GOPATH/src/golang.org/x
+- git clone https://github.com/golang/tools.git
+- git clone https://github.com/golang/lint.git
+- go get github.com/golang/lint/golint
+- popd
+before_script:
+- golint ./test/... | grep -v ALL_CAPS | xargs -r false
+- go fmt ./test/...
+- go vet ./test/...
+script:
+- ./build
+- mkdir -p ${TRAVIS_BUILD_DIR}/dist
+- tar cvfz ${TRAVIS_BUILD_DIR}/dist/test_amd64.tar.gz --warning=no-file-changed --exclude="dist"
+  --exclude="vendor" .
+before_deploy:
+- go get -u github.com/laher/goxc
+- mkdir -p $TRAVIS_BUILD_DIR/dist
+- goxc -d=$TRAVIS_BUILD_DIR/dist -pv=$TRAVIS_TAG -bc=linux -tasks=clean-destination,xc,archive,rmbin
+deploy:
+  provider: releases
+  api_key:
+    secure: cu5UHUUo0kmPWAz1ooWETcS28xEM9/yme8qIhiEXg6nktKDceBY1q0B3IE1OubCUEQnAxkzkd0KFuiQUvQQLIMQlPFdWQVEI4p7gFK5eAaPOeXdXj/9jXtcxBsTxwiutDMIIEECSibGJtFHKgVtMkBM74yTOX7dxQiD+y9Av/C/m3jiB1/Ldo6PtT8vSWfZVDtHU+Jv11ELNBYm5ggJ145SBS4VddkmGOw5+KD4W5JDqdXJ847dEnQ4zb7HNiDGH2+ONJu2CvCTtfJ/yOIiU+1QqkVMZRxhMn3q2np0fK2qD6BZD5HneOaPhh0dQC/ClVfwXorwgd0ne/uw1+aFV4GTc1k1/bZ0xm2jUYwByiYbrB4AGvAICJM6Qo8nGJdcpv2b+zHdhEkhK6ztgFg1rVAoqUuFU+nRZG34n3qS0t4yTB6GEbh0hFqegWDXlN8SdcNK+tJ0F57d3vbMMWgkw6BBQ5gJhFzuFI3fRNW0lOUutA0/PCTyCU6vsh+xpTLSG3bXWuHeAw4VhG7SRp2fygAYzStSD1asEdOPJ/syYAatuQemNYZv1+5jebA7YO1AWgsiz+cFIkXZbJJ2ZoNs9alHzTT7S+Mu5NlX2lyXPeH9gwycpJQBufa7aOngI+LFQRx3tsUTOHd122jDWXnI9plcxberyw8t8qG8sniWTUoE=
+  file: '"$TRAVIS_BUILD_DIR/dist/*/*.gz"'
+  on:
+    repo: rkamudhan/test2
