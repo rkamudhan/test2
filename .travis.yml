@@ -14,7 +14,7 @@ before_script:
 - go fmt ./test/...
 - go vet ./test/...
 script:
-- ./build
+- ./build.sh
 - mkdir -p ${TRAVIS_BUILD_DIR}/dist
 - tar cvfz ${TRAVIS_BUILD_DIR}/dist/test_amd64.tar.gz --warning=no-file-changed --exclude="dist"
   --exclude="vendor" .
